@@ -24,14 +24,14 @@ TEST_CASE("none args call", "[engine]") {
 TEST_CASE("args call", "[engine]") {
   mrubypp engine;
   engine.load(R"(
-      def add(a)
+      def sort_and_get_first(a)
         a.sort!
         a[0]
       end
   )");
 
   std::vector<int> a{3, 1, 2};
-  auto b = engine.call<int>("add", a);
+  auto b = engine.call<int>("sort_and_get_first", a);
   REQUIRE(b == 1);
 }
 

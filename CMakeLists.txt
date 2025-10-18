@@ -5,7 +5,7 @@ project(mrubypp LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(MRUBYPP_BUILD_TEST "Build Catch2 Test" ON)
+option(MRUBYPP_BUILD_TEST "Build Catch2 Test" OFF)
 
 if (MSVC)
     add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
