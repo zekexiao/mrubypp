@@ -2,14 +2,9 @@
 // Created by ZekeXiao on 2025/10/18.
 //
 
-#ifndef MRUBYPP_POINT_H
-#define MRUBYPP_POINT_H
+#include <catch2/catch_all.hpp>
 
-#include "mrubypp_converters.h"
-
-#include "mruby/data.h"
-
-#include "mrubypp_bind_class.h"
+#include "mrubypp.h"
 
 class Point {
 public:
@@ -39,7 +34,6 @@ private:
 
 template <> struct mrubypp_converter<Point> {
   static mrb_value to_mrb(mrb_state *mrb, const Point &var) {
-    // 创建一个新的 Point 对象数据结构
     mrb_value obj = mrb_obj_value(
         mrb_data_object_alloc(mrb, mrb->object_class, new Point(var),
                               &mrubypp_class_builder<Point>::data_type));
@@ -47,12 +41,34 @@ template <> struct mrubypp_converter<Point> {
   }
 
   static Point from_mrb(mrb_state *mrb, mrb_value value) {
-    // 从 mrb_value 中提取 Point 对象
     if (mrb_type(value) == MRB_TT_DATA) {
       Point *point = static_cast<Point *>(DATA_PTR(value));
       return *point;
     }
-    return Point(0, 0); // 默认构造
+    return Point(0, 0);
   }
 };
-#endif // MRUBYPP_POINT_H
+
+TEST_CASE("Point", "[class]") {
+  mrubypp engine;
+  engine.class_builder<Point>("Point")
+      .def_constructor<int, int>()
+      .def_method("add", &Point::add)
+      .def_class_method("none", &Point::none)
+      .def_property("x", &Point::get_x, &Point::set_x);
+
+  engine.load(R"(
+    def test_point()
+      p = Point.new(3, 4)
+      p.x = 10
+      p.add(p)
+      p.x += Point::none()
+      return p
+    end
+  )");
+
+  auto point_result = engine.call<Point>("test_point");
+
+  REQUIRE(point_result.get_x() == 21);
+  REQUIRE(point_result.get_y() == 8);
+}
