@@ -20,12 +20,15 @@ add_executable(mrubypp main.cpp
         example/Point.h)
 
 
-set(mruby_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/deps/mruby")
+if (NOT mruby_ROOT)
+    message(NOTICE "[mrubypp] Using default mruby build")
+    set(mruby_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/deps/mruby")
+endif ()
+
 target_include_directories(mrubypp PUBLIC "${mruby_ROOT}/include")
 target_link_directories(mrubypp PUBLIC "${mruby_ROOT}/lib")
 target_link_libraries(mrubypp PUBLIC
-        libmruby
-        ws2_32.lib wsock32.lib ws2_32.lib)
+        libmruby ws2_32.lib wsock32.lib ws2_32.lib)
 
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 
