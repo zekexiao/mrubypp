@@ -12,7 +12,7 @@ jobs:
         run: |
           sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list.d/ubuntu.sources
           apt update
-          apt install -y libmruby-dev
+          apt install -y libmruby-dev cmake build-essential
           mkdir build && cd build
           cmake ..
           cmake --build . --target mrubypp_test
