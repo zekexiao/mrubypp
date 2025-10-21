@@ -10,7 +10,7 @@ jobs:
         uses: actions/checkout@v4
       - name: List files in the repository
         run: |
-          ls ${{ gitea.workspace }}
+          sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list.d/ubuntu.sources
           apt update && apt install libmruby-dev
           mkdir build && cd build
           cmake ..
