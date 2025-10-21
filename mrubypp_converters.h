@@ -29,6 +29,15 @@ template <> struct mrubypp_converter<int> {
   }
 };
 
+template <> struct mrubypp_converter<unsigned int> {
+  static mrb_value to_mrb(mrb_state *mrb, unsigned int var) {
+    return mrb_fixnum_value(var);
+  }
+  static int from_mrb(mrb_state *mrb, mrb_value value) {
+    return mrb_fixnum(value);
+  }
+};
+
 template <> struct mrubypp_converter<float> {
   static mrb_value to_mrb(mrb_state *mrb, float var) {
     return mrb_float_value(mrb, var);
@@ -57,6 +66,12 @@ template <> struct mrubypp_converter<std::string> {
       return std::string(RSTRING_PTR(value), RSTRING_LEN(value));
     }
     return {};
+  }
+};
+
+template <> struct mrubypp_converter<const char *> {
+  static mrb_value to_mrb(mrb_state *mrb, const char *var) {
+    return mrb_str_new(mrb, var, (mrb_int)strlen(var));
   }
 };
 

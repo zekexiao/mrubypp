@@ -7,6 +7,7 @@
 
 #include <mruby.h>
 
+// gc arena
 class mrubypp_arena_guard {
 public:
   explicit mrubypp_arena_guard(mrb_state *mrb) : mrb(mrb) {

@@ -11,42 +11,42 @@
 
 #include <mruby/compile.h>
 
-// 支持自定义类型注册
 class mrubypp {
 public:
-  mrubypp() { mrb = mrb_open(); }
-  ~mrubypp() { mrb_close(mrb); }
+  mrubypp() { mrb_ = mrb_open(); }
+  ~mrubypp() { mrb_close(mrb_); }
   void load(const std::string &str) {
-    if (!mrb)
+    if (!mrb_)
       return;
-    mrb_load_string(mrb, str.c_str());
+    mrb_load_string(mrb_, str.c_str());
   }
 
   template <typename T> T call(const std::string &funcName) {
-    mrubypp_arena_guard guard(mrb);
-    mrb_value result = mrb_funcall(mrb, mrb_top_self(mrb), funcName.data(), 0);
-    return mrubypp_converter<T>::from_mrb(mrb, result);
+    mrubypp_arena_guard guard(mrb_);
+    mrb_value result =
+        mrb_funcall(mrb_, mrb_top_self(mrb_), funcName.data(), 0);
+    return mrubypp_converter<T>::from_mrb(mrb_, result);
   }
 
   template <typename T, typename... Args>
   T call(const std::string &funcName, Args... args) {
-    mrubypp_arena_guard guard(mrb);
-    mrb_value argv[] = {mrubypp_converter<Args>::to_mrb(mrb, args)...};
-    mrb_sym sym = mrb_intern_cstr(mrb, funcName.data());
+    mrubypp_arena_guard guard(mrb_);
+    mrb_value argv[] = {mrubypp_converter<Args>::to_mrb(mrb_, args)...};
+    mrb_sym sym = mrb_intern_cstr(mrb_, funcName.data());
     mrb_value result =
-        mrb_funcall_argv(mrb, mrb_top_self(mrb), sym, sizeof...(Args), argv);
-    return mrubypp_converter<T>::from_mrb(mrb, result);
+        mrb_funcall_argv(mrb_, mrb_top_self(mrb_), sym, sizeof...(Args), argv);
+    return mrubypp_converter<T>::from_mrb(mrb_, result);
   }
 
   template <typename T>
   mrubypp_class_builder<T> class_builder(const std::string &class_name) {
-    return mrubypp_class_builder<T>(mrb, class_name);
+    return mrubypp_class_builder<T>(mrb_, class_name);
   }
 
-  [[nodiscard]] mrb_state *get_mrb() const { return mrb; }
+  [[nodiscard]] mrb_state *get_mrb() const { return mrb_; }
 
 private:
-  mrb_state *mrb;
+  mrb_state *mrb_;
 };
 
 #endif // MRUBYPP_H
