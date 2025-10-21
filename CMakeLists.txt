@@ -44,7 +44,7 @@ if (${MRUBYPP_BUILD_TEST})
         target_link_libraries(mrubypp_test PUBLIC
                 libmruby ws2_32.lib wsock32.lib ws2_32.lib)
     else ()
-        target_link_libraries(mrubypp_test PUBLIC libmruby)
+        target_link_libraries(mrubypp_test PUBLIC mruby)
     endif ()
 
 
