@@ -11,7 +11,8 @@ jobs:
       - name: List files in the repository
         run: |
           sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list.d/ubuntu.sources
-          apt update && apt install libmruby-dev
+          apt update
+          apt install -y libmruby-dev
           mkdir build && cd build
           cmake ..
           cmake --build . --target mrubypp_test

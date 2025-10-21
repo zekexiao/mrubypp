@@ -40,8 +40,13 @@ if (${MRUBYPP_BUILD_TEST})
 
     target_include_directories(mrubypp_test PUBLIC "${mruby_ROOT}/include")
     target_link_directories(mrubypp_test PUBLIC "${mruby_ROOT}/lib")
-    target_link_libraries(mrubypp_test PUBLIC
-            libmruby ws2_32.lib wsock32.lib ws2_32.lib)
+    if (WIN32)
+        target_link_libraries(mrubypp_test PUBLIC
+                libmruby ws2_32.lib wsock32.lib ws2_32.lib)
+    else ()
+        target_link_libraries(mrubypp_test PUBLIC libmruby)
+    endif ()
+
 
     target_link_libraries(mrubypp_test PRIVATE mrubypp Catch2::Catch2WithMain)
     add_test(NAME mrubypp_test COMMAND mrubypp_test)
