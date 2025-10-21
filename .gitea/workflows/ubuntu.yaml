@@ -8,11 +8,13 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
-      - name: List files in the repository
+      - name: install depends
         run: |
           sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list.d/ubuntu.sources
           apt update
           apt install -y libmruby-dev cmake build-essential
+      - name: build
+        run: |
           mkdir build && cd build
           cmake ..
           cmake --build . --target mrubypp_test
