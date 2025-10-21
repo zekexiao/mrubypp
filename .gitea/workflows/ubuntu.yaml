@@ -11,7 +11,7 @@ jobs:
       - name: List files in the repository
         run: |
           ls ${{ gitea.workspace }}
-          apt install libmruby-dev
+          apt update && apt install libmruby-dev
           mkdir build && cd build
           cmake ..
           cmake --build . --target mrubypp_test
