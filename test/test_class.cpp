@@ -16,16 +16,10 @@ public:
   }
 
   int get_x() const { return x_; }
-  void set_x(int x) {
-    //
-    x_ = x;
-  }
+  void set_x(int x) { x_ = x; }
 
   int get_y() const { return y_; }
-  void set_y(int y) {
-    //
-    y_ = y;
-  }
+  void set_y(int y) { y_ = y; }
 
   void add(const Point &other) {
     this->x_ += other.x_;
@@ -113,6 +107,7 @@ TEST_CASE("Point", "[class]") {
     REQUIRE(point_result.get_x() == 2);
     REQUIRE(point_result.get_y() == 4);
   }
+
   SECTION("test_class_method") {
     auto result = engine.call<int>("test_class_method");
     REQUIRE(result == 1);

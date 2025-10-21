@@ -1,0 +1,19 @@
+name: ubuntu
+run-name: ubuntu-test
+on: [ push ]
+
+jobs:
+  Explore-Gitea-Actions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: List files in the repository
+        run: |
+          ls ${{ gitea.workspace }}
+          apt install libmruby-dev
+          mkdir build && cd build
+          cmake ..
+          cmake --build . --target mrubypp_test
+          ./mrubypp_test
+      - run: echo "🍏 This job's status is ${{ job.status }}."
