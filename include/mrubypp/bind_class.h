@@ -4,12 +4,8 @@
 #include "arena_guard.h"
 #include "converters.h"
 
-#include <functional>
-#include <map>
 #include <string>
-#include <type_traits>
-#include <utility>
-#include <vector>
+#include <tuple>
 
 #include <mruby/class.h>
 #include <mruby/data.h>
@@ -129,7 +125,7 @@ struct function_wrapper {
   }
 };
 
-template <typename T> class class_builder;
+template <typename T> class bind_class;
 
 template <typename T, typename... Args> struct constructor_wrapper {
   static mrb_value wrapper(mrb_state *mrb, mrb_value self) {
@@ -137,16 +133,16 @@ template <typename T, typename... Args> struct constructor_wrapper {
     T *instance = std::apply([](Args... args) { return new T(args...); }, args);
 
     DATA_PTR(self) = instance;
-    DATA_TYPE(self) = &class_builder<T>::data_type;
+    DATA_TYPE(self) = &bind_class<T>::data_type;
     return self;
   }
 };
 
-template <typename T> class class_builder {
+template <typename T> class bind_class {
 public:
   static const struct mrb_data_type data_type;
 
-  class_builder(mrb_state *mrb, std::string name)
+  bind_class(mrb_state *mrb, std::string name)
       : mrb_(mrb), name_(std::move(name)) {
     rclass_ = mrb_define_class(mrb_, name_.c_str(), mrb_->object_class);
     MRB_SET_INSTANCE_TT(rclass_, MRB_TT_DATA);
@@ -161,7 +157,7 @@ public:
         MRB_ARGS_ANY());
   }
 
-  template <typename... Args> class_builder &def_constructor() {
+  template <typename... Args> bind_class &def_constructor() {
     mrb_define_method(mrb_, rclass_, "initialize",
                       &constructor_wrapper<T, Args...>::wrapper,
                       MRB_ARGS_REQ(sizeof...(Args)));
@@ -169,8 +165,8 @@ public:
   }
 
   template <typename Ret, typename... MethodArgs>
-  class_builder &def_method(const std::string &name,
-                            Ret (T::*method)(MethodArgs...)) {
+  bind_class &def_method(const std::string &name,
+                         Ret (T::*method)(MethodArgs...)) {
     mrb_sym method_sym = mrb_intern_cstr(mrb_, name.c_str());
 
     using wrap = method_wrapper<T, Ret, MethodArgs...>;
@@ -188,8 +184,8 @@ public:
   }
 
   template <typename Ret, typename... MethodArgs>
-  class_builder &def_method(const std::string &name,
-                            Ret (T::*method)(MethodArgs...) const) {
+  bind_class &def_method(const std::string &name,
+                         Ret (T::*method)(MethodArgs...) const) {
     mrb_sym method_sym = mrb_intern_cstr(mrb_, name.c_str());
     using wrap = const_method_wrapper<T, Ret, MethodArgs...>;
 
@@ -206,8 +202,8 @@ public:
   }
 
   template <typename Ret, typename... FuncArgs>
-  class_builder &def_class_method(const std::string &name,
-                                  Ret (*func)(FuncArgs...)) {
+  bind_class &def_class_method(const std::string &name,
+                               Ret (*func)(FuncArgs...)) {
     using wrap = function_wrapper<T, Ret, FuncArgs...>;
     mrb_value env[] = {
         mrb_cptr_value(mrb_, (void *)func),
@@ -226,15 +222,15 @@ public:
 
   // get set
   template <typename Ret>
-  class_builder &def_property(const std::string &name, Ret (T::*getter)() const,
-                              void (T::*setter)(Ret)) {
+  bind_class &def_property(const std::string &name, Ret (T::*getter)() const,
+                           void (T::*setter)(Ret)) {
     def_method(name, getter);
     def_method(name + "=", setter);
     return *this;
   }
 
-  class_builder &def_native(const std::string &name, mrb_func_t func,
-                            mrb_aspec aspec = MRB_ARGS_ANY()) {
+  bind_class &def_native(const std::string &name, mrb_func_t func,
+                         mrb_aspec aspec = MRB_ARGS_ANY()) {
     mrb_define_method(mrb_, rclass_, name.c_str(), func, aspec);
     return *this;
   }
@@ -262,8 +258,8 @@ private:
   std::string name_;
 };
 
-template <typename T> const struct mrb_data_type class_builder<T>::data_type = {
-  typeid(T).name(), class_builder<T>::free_instance
+template <typename T> const struct mrb_data_type bind_class<T>::data_type = {
+  typeid(T).name(), bind_class<T>::free_instance
 };
 } // namespace mrubypp
 

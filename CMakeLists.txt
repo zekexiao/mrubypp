@@ -14,13 +14,12 @@ if (MSVC)
 endif ()
 
 add_library(mrubypp INTERFACE
-        engine.h
-        converters.h
-        arena_guard.h
-        bind_class.h)
+        include/mrubypp/engine.h
+        include/mrubypp/converters.h
+        include/mrubypp/arena_guard.h
+        include/mrubypp/bind_class.h)
 
-
-include_directories(${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(mrubypp INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
 
 if (${MRUBYPP_BUILD_TEST})
     if (NOT DEFINED mruby_ROOT)

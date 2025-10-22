@@ -4,7 +4,8 @@
 
 #include <catch2/catch_all.hpp>
 
-#include "engine.h"
+#include <mrubypp/bind_class.h>
+#include <mrubypp/engine.h>
 
 class Point {
 public:
@@ -36,18 +37,18 @@ private:
 };
 
 static mrb_value point_native_div(mrb_state *mrb, mrb_value self) {
-  auto point = mrubypp_class_builder<Point>::get_this(mrb, self);
-  auto divisor = mrubypp_converter<int>::from_mrb(mrb, mrb_get_arg1(mrb));
+  auto point = mrubypp::bind_class<Point>::get_this(mrb, self);
+  auto divisor = mrubypp::converter<int>::from_mrb(mrb, mrb_get_arg1(mrb));
   point->set_x(point->get_x() / divisor);
   point->set_y(point->get_y() / divisor);
   return self;
 }
 
-template <> struct mrubypp_converter<Point> {
+template <> struct mrubypp::converter<Point> {
   static mrb_value to_mrb(mrb_state *mrb, const Point &var) {
     mrb_value obj = mrb_obj_value(
         mrb_data_object_alloc(mrb, mrb->object_class, new Point(var),
-                              &mrubypp_class_builder<Point>::data_type));
+                              &mrubypp::bind_class<Point>::data_type));
     return obj;
   }
 
@@ -60,9 +61,9 @@ template <> struct mrubypp_converter<Point> {
   }
 };
 
-TEST_CASE("Point", "[class]") {
-  engine engine;
-  engine.class_builder<Point>("Point")
+TEST_CASE("bind_class", "[class]") {
+  mrubypp::engine engine;
+  mrubypp::bind_class<Point>(engine.get_mrb(), "Point")
       .def_constructor<int, int>()
       .def_method("add", &Point::add)
       .def_class_method("none", &Point::none)
