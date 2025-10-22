@@ -4,7 +4,6 @@ project(mrubypp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(mruby_ROOT "/mnt/d/Sources/mruby/build/host")
 
 option(MRUBYPP_BUILD_TEST "Build Catch2 Test" OFF)
 
@@ -24,11 +23,10 @@ add_library(mrubypp INTERFACE
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 
 if (${MRUBYPP_BUILD_TEST})
-    if (NOT mruby_ROOT)
+    if (NOT DEFINED mruby_ROOT)
         message(NOTICE "[mrubypp] Using default mruby build")
         set(mruby_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/deps/mruby")
     endif ()
-
 
     add_subdirectory(deps/Catch2)
 
