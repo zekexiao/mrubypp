@@ -14,10 +14,10 @@ if (MSVC)
 endif ()
 
 add_library(mrubypp INTERFACE
-        mrubypp.h
-        mrubypp_converters.h
-        mrubypp_arena_guard.h
-        mrubypp_bind_class.h)
+        engine.h
+        converters.h
+        arena_guard.h
+        bind_class.h)
 
 
 include_directories(${CMAKE_CURRENT_LIST_DIR})

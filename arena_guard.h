@@ -7,15 +7,16 @@
 
 #include <mruby.h>
 
+namespace mrubypp {
 // gc arena
-class mrubypp_arena_guard {
+class arena_guard {
 public:
-  explicit mrubypp_arena_guard(mrb_state *mrb) : mrb(mrb) {
+  explicit arena_guard(mrb_state *mrb) : mrb(mrb) {
     ai = mrb_gc_arena_save(mrb);
   }
-  mrubypp_arena_guard(mrubypp_arena_guard &&other) = delete;
-  mrubypp_arena_guard(const mrubypp_arena_guard &other) = delete;
-  ~mrubypp_arena_guard() { mrb_gc_arena_restore(mrb, ai); }
+  arena_guard(arena_guard &&other) = delete;
+  arena_guard(const arena_guard &other) = delete;
+  ~arena_guard() { mrb_gc_arena_restore(mrb, ai); }
 
   // arena_idx
   [[nodiscard]] int get_ai() const { return ai; }
@@ -24,4 +25,5 @@ private:
   mrb_state *mrb;
   int ai;
 };
+} // namespace mrubypp
 #endif // MRUBYPP_MRUBYPP_UTILS_H

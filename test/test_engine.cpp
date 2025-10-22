@@ -7,10 +7,10 @@
 
 #include <catch2/catch_all.hpp>
 
-#include "mrubypp.h"
+#include "engine.h"
 
 TEST_CASE("none args call", "[engine]") {
-  mrubypp engine;
+  engine engine;
   engine.load(R"(
       def get_1()
         1
@@ -22,7 +22,7 @@ TEST_CASE("none args call", "[engine]") {
 }
 
 TEST_CASE("args call", "[engine]") {
-  mrubypp engine;
+  engine engine;
   engine.load(R"(
       def sort_and_get_first(a)
         a.sort!
@@ -36,7 +36,7 @@ TEST_CASE("args call", "[engine]") {
 }
 
 TEST_CASE("call benchmark", "[!benchmark]") {
-  mrubypp engine;
+  engine engine;
   engine.load(R"(
       def get_same(a)
         return a

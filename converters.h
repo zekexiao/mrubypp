@@ -1,7 +1,7 @@
 #ifndef MRUBYPP_STD_CONVERTERS_H
 #define MRUBYPP_STD_CONVERTERS_H
 
-#include "mrubypp_arena_guard.h"
+#include "arena_guard.h"
 
 #include <mruby.h>
 #include <mruby/array.h>
@@ -9,7 +9,9 @@
 #include <string>
 #include <vector>
 
-template <typename T> struct mrubypp_converter {
+namespace mrubypp {
+
+template <typename T> struct converter {
   static mrb_value to_mrb(mrb_state *mrb, const T &var) {
     static_assert(sizeof(T) == 0, "Specialization required");
     return mrb_nil_value();
@@ -20,7 +22,7 @@ template <typename T> struct mrubypp_converter {
   }
 };
 
-template <> struct mrubypp_converter<int> {
+template <> struct converter<int> {
   static mrb_value to_mrb(mrb_state *mrb, int var) {
     return mrb_fixnum_value(var);
   }
@@ -29,7 +31,7 @@ template <> struct mrubypp_converter<int> {
   }
 };
 
-template <> struct mrubypp_converter<unsigned int> {
+template <> struct converter<unsigned int> {
   static mrb_value to_mrb(mrb_state *mrb, unsigned int var) {
     return mrb_fixnum_value(var);
   }
@@ -38,7 +40,7 @@ template <> struct mrubypp_converter<unsigned int> {
   }
 };
 
-template <> struct mrubypp_converter<float> {
+template <> struct converter<float> {
   static mrb_value to_mrb(mrb_state *mrb, float var) {
     return mrb_float_value(mrb, var);
   }
@@ -47,7 +49,7 @@ template <> struct mrubypp_converter<float> {
   }
 };
 
-template <> struct mrubypp_converter<double> {
+template <> struct converter<double> {
   static mrb_value to_mrb(mrb_state *mrb, double var) {
     return mrb_float_value(mrb, var);
   }
@@ -56,7 +58,7 @@ template <> struct mrubypp_converter<double> {
   }
 };
 
-template <> struct mrubypp_converter<std::string> {
+template <> struct converter<std::string> {
   static mrb_value to_mrb(mrb_state *mrb, const std::string &var) {
     return mrb_str_new(mrb, var.data(), (mrb_int)var.size());
   }
@@ -69,34 +71,35 @@ template <> struct mrubypp_converter<std::string> {
   }
 };
 
-template <> struct mrubypp_converter<const char *> {
+template <> struct converter<const char *> {
   static mrb_value to_mrb(mrb_state *mrb, const char *var) {
     return mrb_str_new(mrb, var, (mrb_int)strlen(var));
   }
 };
 
-template <typename T> struct mrubypp_converter<std::vector<T>> {
+template <typename T> struct converter<std::vector<T>> {
   static mrb_value to_mrb(mrb_state *mrb, const std::vector<T> &var) {
     mrb_value ary = mrb_ary_new_capa(mrb, static_cast<mrb_int>(var.size()));
     for (const T &el : var) {
-      mrubypp_arena_guard guard(mrb);
-      mrb_ary_push(mrb, ary, mrubypp_converter<T>::to_mrb(mrb, el));
+      arena_guard guard(mrb);
+      mrb_ary_push(mrb, ary, converter<T>::to_mrb(mrb, el));
     }
     return ary;
   }
 
   static std::vector<T> from_mrb(mrb_state *mrb, mrb_value value) {
-    mrubypp_arena_guard guard(mrb);
+    arena_guard guard(mrb);
     std::vector<T> result;
     if (mrb_array_p(value)) {
       int len = RARRAY_LEN(value);
       for (int i = 0; i < len; ++i) {
-        result.append(
-            mrubypp_converter<T>::from_mrb(mrb, mrb_ary_ref(mrb, value, i)));
+        result.append(converter<T>::from_mrb(mrb, mrb_ary_ref(mrb, value, i)));
       }
     }
     return result;
   }
 };
+
+} // namespace mrubypp
 
 #endif // MRUBYPP_STD_CONVERTERS_H
