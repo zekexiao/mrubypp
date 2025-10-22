@@ -8,7 +8,8 @@
 
 class Point {
 public:
-  Point(int x, int y) : x_(x), y_(y) {}
+  Point(int x, int y) : x_(x), y_(y) {
+  }
 
   void set_values(int x, int y) {
     x_ = x;
@@ -16,10 +17,16 @@ public:
   }
 
   int get_x() const { return x_; }
-  void set_x(int x) { x_ = x; }
+
+  void set_x(int x) {
+    x_ = x;
+  }
 
   int get_y() const { return y_; }
-  void set_y(int y) { y_ = y; }
+
+  void set_y(int y) {
+    y_ = y;
+  }
 
   void add(const Point &other) {
     this->x_ += other.x_;
@@ -41,11 +48,12 @@ static mrb_value point_native_div(mrb_state *mrb, mrb_value self) {
   return self;
 }
 
-template <> struct mrubypp_converter<Point> {
+template<>
+struct mrubypp_converter<Point> {
   static mrb_value to_mrb(mrb_state *mrb, const Point &var) {
     mrb_value obj = mrb_obj_value(
-        mrb_data_object_alloc(mrb, mrb->object_class, new Point(var),
-                              &mrubypp_class_builder<Point>::data_type));
+      mrb_data_object_alloc(mrb, mrb->object_class, new Point(var),
+                            &mrubypp_class_builder<Point>::data_type));
     return obj;
   }
 

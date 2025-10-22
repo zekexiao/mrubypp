@@ -4,6 +4,7 @@ project(mrubypp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(mruby_ROOT "/mnt/d/Sources/mruby/build/host")
 
 option(MRUBYPP_BUILD_TEST "Build Catch2 Test" OFF)
 
