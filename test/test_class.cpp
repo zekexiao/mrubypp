@@ -82,6 +82,61 @@ template <> struct mrubypp::converter<Point> {
   }
 };
 
+
+class Point3D {
+public:
+    Point3D(int x, int y, int z) : x_(x), y_(y), z_(z) {}
+
+    void set_values(int x, int y, int z) {
+        x_ = x;
+        y_ = y;
+        z_ = z;
+    }
+
+    int get_x() const { return x_; }
+
+    void set_x(int x) { x_ = x; }
+
+    int get_y() const { return y_; }
+
+    void set_y(int y) { y_ = y; }
+
+    int get_z() const { return z_; }
+
+    void set_z(int y) { z_ = y; }
+
+    void add(const Point3D& other) {
+        this->x_ += other.x_;
+        this->y_ += other.y_;
+        this->z_ += other.z_;
+    }
+
+    static int none() { return 1; }
+
+private:
+    int x_;
+    int y_;
+    int z_;
+};
+
+template <> struct mrubypp::converter<Point3D> {
+    static mrb_value to_mrb(mrb_state* mrb, const Point3D& var) {
+        mrb_value obj = mrb_obj_value(
+            mrb_data_object_alloc(mrb, mrb->object_class, new Point3D(var),
+                &mrubypp::bind_class<Point3D>::data_type));
+        return obj;
+    }
+
+    static Point3D from_mrb(mrb_state* mrb, mrb_value value) {
+        if (mrb_type(value) == MRB_TT_DATA) {
+            Point3D* point = static_cast<Point3D*>(DATA_PTR(value));
+            return *point;
+        }
+        return Point3D(0, 0,0 );
+    }
+};
+
+
 TEST_CASE("bind_class", "[class]") {
   mrubypp::engine engine;
   mrubypp::bind_class<Point>(engine.get_mrb(), "Point")
@@ -91,6 +146,12 @@ TEST_CASE("bind_class", "[class]") {
       .def_property("x", &Point::get_x, &Point::set_x)
       .def_property("y", &Point::get_y, &Point::set_y)
       .def_native("div", point_native_div, MRB_ARGS_REQ(1));
+
+  mrubypp::bind_class<Point3D>(engine.get_mrb(), "Point3D")
+      .def_constructor<int, int, int>()
+      .def_property("x", &Point3D::get_x, &Point3D::set_x)
+      .def_property("y", &Point3D::get_y, &Point3D::set_y)
+      .def_property("z", &Point3D::get_z, &Point3D::set_z);
 
   engine.load(R"(
     def test_method()
@@ -114,6 +175,11 @@ TEST_CASE("bind_class", "[class]") {
     end
     def test_class_init()
       return Point.new(10)
+    end
+    def test_point3d_init()
+      p = Point.new(10, 11)
+      p3d = Point3D.new(p.x, p.y, 5)
+      return p3d
     end
   )");
 
@@ -144,5 +210,12 @@ TEST_CASE("bind_class", "[class]") {
       auto result = engine.call<Point>("test_class_init");
       REQUIRE(result.get_x() == 10);
       REQUIRE(result.get_y() == 0);
+  }
+
+  SECTION("test_point3d_init") {
+      auto result = engine.call<Point3D>("test_point3d_init");
+      REQUIRE(result.get_x() == 10);
+      REQUIRE(result.get_y() == 11);
+      REQUIRE(result.get_z() == 5);
   }
 }
