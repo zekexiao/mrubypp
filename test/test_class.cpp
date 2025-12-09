@@ -36,6 +36,27 @@ private:
   int y_;
 };
 
+static mrb_value point_native_init(mrb_state* mrb, mrb_value self) {
+    auto count = mrb_get_argc(mrb);
+    Point* p = nullptr;
+    if (count == 0)
+    {
+        p = new Point(0, 0);
+    } else if (count == 1) {
+        auto argv = mrb_get_argv(mrb);
+		p = new Point(mrb_as_float(mrb, argv[0]), 0);
+    } else if (count == 2) {
+        auto argv = mrb_get_argv(mrb);
+        p = new Point(mrb_as_float(mrb, argv[0]), mrb_as_float(mrb, argv[1]));
+    } else {
+		mrb_raise(mrb, E_ARGUMENT_ERROR, "Point wrong number of arguments");
+    }
+ 
+    DATA_PTR(self) = p;
+    DATA_TYPE(self) = &mrubypp::bind_class<Point>::data_type;
+    return self;
+}
+
 static mrb_value point_native_div(mrb_state *mrb, mrb_value self) {
   auto point = mrubypp::bind_class<Point>::get_this(mrb, self);
   auto divisor = mrubypp::converter<int>::from_mrb(mrb, mrb_get_arg1(mrb));
@@ -64,7 +85,7 @@ template <> struct mrubypp::converter<Point> {
 TEST_CASE("bind_class", "[class]") {
   mrubypp::engine engine;
   mrubypp::bind_class<Point>(engine.get_mrb(), "Point")
-      .def_constructor<int, int>()
+      .def_constructor(point_native_init, MRB_ARGS_OPT(2))
       .def_method("add", &Point::add)
       .def_class_method("none", &Point::none)
       .def_property("x", &Point::get_x, &Point::set_x)
@@ -91,6 +112,9 @@ TEST_CASE("bind_class", "[class]") {
     def test_class_method()
       return Point::none()
     end
+    def test_class_init()
+      return Point.new(10)
+    end
   )");
 
   SECTION("test_method") {
@@ -114,5 +138,11 @@ TEST_CASE("bind_class", "[class]") {
   SECTION("test_class_method") {
     auto result = engine.call<int>("test_class_method");
     REQUIRE(result == 1);
+  }
+
+  SECTION("test_class_init") {
+      auto result = engine.call<Point>("test_class_init");
+      REQUIRE(result.get_x() == 10);
+      REQUIRE(result.get_y() == 0);
   }
 }

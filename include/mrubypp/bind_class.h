@@ -37,11 +37,11 @@ template <typename T, typename Ret, typename... MethodArgs>
 struct method_wrapper {
   using MethodType = Ret (T::*)(MethodArgs...);
 
-  // TODO, fix memory leak
-  static void *method_to_ptr(MethodType method) {
-    auto ptr = malloc(sizeof(MethodType));
+  static mrb_value method_to_ptr(mrb_state* mrb, MethodType method) {
+    mrb_value bytes = mrb_str_new(mrb, NULL, sizeof(MethodType));
+    void* ptr = (void*)RSTRING_PTR(bytes);
     memcpy(ptr, &method, sizeof(MethodType));
-    return ptr;
+    return bytes;
   }
 
   static MethodType ptr_to_method(void *ptr) {
@@ -57,7 +57,7 @@ struct method_wrapper {
       mrb_raise(mrb, E_RUNTIME_ERROR, "invalid instance");
     }
 
-    void *method_ptr = mrb_cptr(mrb_cfunc_env_get(mrb, 0));
+    void *method_ptr = (void*)RSTRING_PTR(mrb_cfunc_env_get(mrb, 0));
     auto method = ptr_to_method(method_ptr);
 
     if constexpr (std::is_same_v<Ret, void>) {
@@ -75,11 +75,11 @@ template <typename T, typename Ret, typename... MethodArgs>
 struct const_method_wrapper {
   using MethodType = Ret (T::*)(MethodArgs...) const;
 
-  // TODO, fix memory leak
-  static void *method_to_ptr(MethodType method) {
-    auto ptr = malloc(sizeof(MethodType));
-    memcpy(ptr, &method, sizeof(MethodType));
-    return ptr;
+  static mrb_value method_to_ptr(mrb_state* mrb, MethodType method) {
+      mrb_value bytes = mrb_str_new(mrb, NULL, sizeof(MethodType));
+      void* ptr = (void*)RSTRING_PTR(bytes);
+      memcpy(ptr, &method, sizeof(MethodType));
+      return bytes;
   }
 
   static MethodType ptr_to_method(void *ptr) {
@@ -95,7 +95,7 @@ struct const_method_wrapper {
       mrb_raise(mrb, E_RUNTIME_ERROR, "invalid instance");
     }
 
-    void *method_ptr = mrb_cptr(mrb_cfunc_env_get(mrb, 0));
+    void *method_ptr = (void*)RSTRING_PTR(mrb_cfunc_env_get(mrb, 0));
     auto method = ptr_to_method(method_ptr);
     if constexpr (std::is_same_v<Ret, void>) {
       std::apply(method, std::tuple_cat(std::make_tuple(instance), args));
@@ -164,17 +164,20 @@ public:
     return *this;
   }
 
+  bind_class& def_constructor(mrb_func_t func,
+      mrb_aspec aspec = MRB_ARGS_ANY()) {
+      return def_native("initialize", func, aspec);
+  }
+
   template <typename Ret, typename... MethodArgs>
   bind_class &def_method(const std::string &name,
                          Ret (T::*method)(MethodArgs...)) {
     mrb_sym method_sym = mrb_intern_cstr(mrb_, name.c_str());
 
     using wrap = method_wrapper<T, Ret, MethodArgs...>;
-    auto ptr = wrap::method_to_ptr(method);
-
-    mrb_value env[] = {
-        mrb_cptr_value(mrb_, ptr),
-    };
+    auto obj = wrap::method_to_ptr(mrb_, method);
+    mrb_gc_protect(mrb_, obj);
+    mrb_value env[] = { obj };
     struct RProc *p = mrb_proc_new_cfunc_with_env(mrb_, &wrap::wrapper, 1, env);
     mrb_method_t m;
     MRB_METHOD_FROM_PROC(m, p);
@@ -189,10 +192,10 @@ public:
     mrb_sym method_sym = mrb_intern_cstr(mrb_, name.c_str());
     using wrap = const_method_wrapper<T, Ret, MethodArgs...>;
 
-    auto ptr = wrap::method_to_ptr(method);
-    auto obj = mrb_cptr_value(mrb_, ptr);
+    auto obj = wrap::method_to_ptr(mrb_, method);
+   
     mrb_gc_protect(mrb_, obj);
-    mrb_value env[] = {obj};
+    mrb_value env[] = { obj };
 
     struct RProc *p = mrb_proc_new_cfunc_with_env(mrb_, &wrap::wrapper, 1, env);
     mrb_method_t m;
